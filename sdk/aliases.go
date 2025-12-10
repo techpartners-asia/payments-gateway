@@ -15,10 +15,12 @@ type (
 	SimpleConfig    = types.SimpleConfig
 	BalcAPIConfig   = types.BalcAPIConfig
 
-	InvoiceInput    = types.InvoiceInput
-	InvoiceResult   = types.InvoiceResult
-	PaymentType     = types.PaymentType
-	PaymentProvider = types.PaymentProvider
+	InvoiceInput       = types.InvoiceInput
+	CheckInvoiceInput  = types.CheckInvoiceInput
+	CheckInvoiceResult = types.CheckInvoiceResult
+	InvoiceResult      = types.InvoiceResult
+	PaymentType        = types.PaymentType
+	PaymentProvider    = types.PaymentProvider
 )
 
 const (
