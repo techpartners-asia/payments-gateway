@@ -99,3 +99,36 @@ func (g *Gateway) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult,
 	}
 	return provider.CreateInvoice(input)
 }
+
+func (g *Gateway) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if g == nil {
+		return nil, fmt.Errorf("gateway is nil")
+	}
+	var provider types.PaymentProvider
+	switch input.Type {
+	case types.PaymentTypeQPay:
+		provider = g.QPayAdapter
+	case types.PaymentTypeTokipay:
+		provider = g.TokiPayAdapter
+	case types.PaymentTypeBalc:
+		provider = g.BalcCreditAdapter
+	case types.PaymentTypeGolomt:
+		provider = g.GolomtAdapter
+	case types.PaymentTypeSocial:
+		provider = g.SocialPayAdapter
+	case types.PaymentTypeStorePay:
+		provider = g.StorePayAdapter
+	case types.PaymentTypePocket:
+		provider = g.PocketAdapter
+	case types.PaymentTypeSimple:
+		provider = g.SimpleAdapter
+	case types.PaymentTypeMonpay:
+		provider = g.MonpayAdapter
+	default:
+		return nil, fmt.Errorf("unsupported payment type: %s", input.Type)
+	}
+	if provider == nil {
+		return nil, fmt.Errorf("adapter for %s is not configured", input.Type)
+	}
+	return provider.CheckInvoice(input)
+}

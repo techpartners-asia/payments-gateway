@@ -46,3 +46,21 @@ func (a *SimpleAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceR
 		IsPaid:        false,
 	}, nil
 }
+
+func (a *SimpleAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("simple adapter not configured")
+	}
+
+	res, err := a.client.GetInvoice(simple.SimpleGetInvoiceRequest{
+		OrderID:  input.PaymentUID,
+		SimpleID: "",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: res.Data.InvoiceStatus == "PAID",
+	}, nil
+}

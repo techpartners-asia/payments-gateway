@@ -21,3 +21,18 @@ func NewMonpayAdapter(client monpay.Monpay) *MonpayAdapter {
 func (a *MonpayAdapter) CreateInvoice(types.InvoiceInput) (*types.InvoiceResult, error) {
 	return nil, fmt.Errorf("monpay create invoice is not implemented; use monpay.GenerateQr or other helpers directly")
 }
+
+func (a *MonpayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("monpay adapter not configured")
+	}
+
+	res, err := a.client.CheckQr(input.PaymentUID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: res.Code == 0,
+	}, nil
+}

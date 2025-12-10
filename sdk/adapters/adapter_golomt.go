@@ -54,3 +54,18 @@ func (a *GolomtAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceR
 		Raw:           res,
 	}, nil
 }
+
+func (a *GolomtAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("golomt adapter not configured")
+	}
+
+	res, err := a.client.Inquiry(input.PaymentUID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: res.Status == types.GolomtTransactionStatusSuccess,
+	}, nil
+}

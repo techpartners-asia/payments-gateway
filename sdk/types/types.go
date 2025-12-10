@@ -5,6 +5,10 @@ import (
 	"strconv"
 )
 
+const (
+	GolomtTransactionStatusSuccess string = "000"
+)
+
 // PaymentType enumerates supported providers for Create().
 type PaymentType string
 
@@ -38,6 +42,17 @@ type InvoiceInput struct {
 	ExpireMinutes int    // optional, used by Simple; defaults applied if zero
 }
 
+type CheckInvoiceInput struct {
+	Type       PaymentType
+	PaymentUID string
+	Amount     float64
+	SimpleID   string // optional, used by Simple; defaults applied if empty
+}
+
+type CheckInvoiceResult struct {
+	IsPaid bool
+}
+
 // Deeplink is a portable representation of provider deeplinks.
 type Deeplink struct {
 	Name        string
@@ -58,6 +73,7 @@ type InvoiceResult struct {
 // PaymentProvider is the common interface adapters must implement.
 type PaymentProvider interface {
 	CreateInvoice(input InvoiceInput) (*InvoiceResult, error)
+	CheckInvoice(input CheckInvoiceInput) (*CheckInvoiceResult, error)
 }
 
 type (

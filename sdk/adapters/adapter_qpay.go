@@ -2,6 +2,7 @@ package sdkAdapters
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/techpartners-asia/payments-gateway/sdk/types"
 
@@ -53,5 +54,29 @@ func (a *QPayAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceRes
 		Deeplinks:     deeplinks,
 		IsPaid:        false,
 		Raw:           res,
+	}, nil
+}
+
+func (a *QPayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("qpay adapter not configured")
+	}
+
+	res, _, err := a.client.CheckPayment(input.PaymentUID, 100, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	amount := float64(0)
+	for _, row := range res.Rows {
+		if row.PaymentStatus == "PAID" {
+			if _amount, err := strconv.ParseFloat(row.PaymentAmount, 64); err == nil {
+				amount += _amount
+			}
+		}
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: amount >= input.Amount,
 	}, nil
 }

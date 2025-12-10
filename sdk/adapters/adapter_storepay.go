@@ -37,3 +37,18 @@ func (a *StorePayAdapter) CreateInvoice(input types.InvoiceInput) (*types.Invoic
 		Raw:           res,
 	}, nil
 }
+
+func (a *StorePayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("storepay adapter not configured")
+	}
+
+	res, err := a.client.LoanCheck(input.PaymentUID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: res,
+	}, nil
+}

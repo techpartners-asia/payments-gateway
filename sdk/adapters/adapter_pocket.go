@@ -47,3 +47,18 @@ func (a *PocketAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceR
 		Raw:    res,
 	}, nil
 }
+
+func (a *PocketAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("pocket adapter not configured")
+	}
+
+	res, err := a.client.GetInvoiceByOrderNumber(input.PaymentUID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: res.State == "paid",
+	}, nil
+}

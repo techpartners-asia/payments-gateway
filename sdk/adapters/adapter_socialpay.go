@@ -37,3 +37,21 @@ func (a *SocialPayAdapter) CreateInvoice(input types.InvoiceInput) (*types.Invoi
 		Raw:           res,
 	}, nil
 }
+
+func (a *SocialPayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("socialpay adapter not configured")
+	}
+
+	res, err := a.client.CheckInvoice(socialpay.InvoiceInput{
+		Invoice: input.PaymentUID,
+		Amount:  input.Amount,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: res.ResponseCode == "00",
+	}, nil
+}

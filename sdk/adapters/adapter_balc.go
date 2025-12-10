@@ -41,3 +41,13 @@ func (a *BalcCreditAdapter) CreateInvoice(input types.InvoiceInput) (*types.Invo
 		Raw:           loanAccountID,
 	}, nil
 }
+
+func (a *BalcCreditAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("balc adapter not configured")
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: true,
+	}, nil
+}

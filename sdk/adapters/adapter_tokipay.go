@@ -41,3 +41,18 @@ func (a *TokiPayAdapter) CreateInvoice(input types.InvoiceInput) (*types.Invoice
 		Raw:           res,
 	}, nil
 }
+
+func (a *TokiPayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
+	if a == nil || a.client == nil {
+		return nil, fmt.Errorf("tokipay adapter not configured")
+	}
+
+	res, err := a.client.PaymentStatus(input.PaymentUID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.CheckInvoiceResult{
+		IsPaid: res.Data.Status == "COMPLETED",
+	}, nil
+}
