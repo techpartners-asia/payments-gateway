@@ -29,7 +29,7 @@ type InvoiceInput struct {
 	IsOrg         bool
 	OrgRegNo      string
 	Phone         string
-	CustomerID    int
+	CustomerID    uint
 	OrderUID      string
 	CountryCode   string // optional, defaults to "+976" for Tokipay
 	Note          string // optional description/notes

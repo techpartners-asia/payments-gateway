@@ -22,7 +22,7 @@ func (a *BalcCreditAdapter) CreateInvoice(input types.InvoiceInput) (*types.Invo
 		return nil, fmt.Errorf("balc adapter not configured")
 	}
 
-	creditCheck, err := a.client.LimitCheck(input.CustomerID)
+	creditCheck, err := a.client.LimitCheck(int(input.CustomerID))
 	if err != nil {
 		return nil, fmt.Errorf("error on balcAPI check: %w", err)
 	}
@@ -30,7 +30,7 @@ func (a *BalcCreditAdapter) CreateInvoice(input types.InvoiceInput) (*types.Invo
 		return nil, fmt.Errorf("таны кредит гүйлгээний дүнд хүрэхгүй байна")
 	}
 
-	loanAccountID, err := a.client.Loan(int(input.Amount), "Зээл", input.CustomerID)
+	loanAccountID, err := a.client.Loan(int(input.Amount), "Зээл", int(input.CustomerID))
 	if err != nil {
 		return nil, fmt.Errorf("зээл авахад алдаа гарлаа: %w", err)
 	}
