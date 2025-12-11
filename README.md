@@ -6,7 +6,7 @@ QPay, Tokipay, Golomt Ecommerce, SocialPay, StorePay, Pocket, Simple, Balc (Monp
 ### Install
 
 ```
-go get github.com/techpartners-asia/payments-go/sdk
+go get github.com/techpartners-asia/payments-gateway/sdk
 ```
 
 ### Quick Start
@@ -15,7 +15,7 @@ go get github.com/techpartners-asia/payments-go/sdk
 import (
     "log"
     "os"
-    paymentssdk "github.com/techpartners-asia/payments-go/sdk"
+    paymentssdk "github.com/techpartners-asia/payments-gateway/sdk"
 )
 
 cfg := paymentssdk.Config{
