@@ -13,8 +13,8 @@ type PocketAdapter struct {
 	client pocket.Pocket
 }
 
-func NewPocketAdapter(client pocket.Pocket) *PocketAdapter {
-	return &PocketAdapter{client: client}
+func NewPocketAdapter(input types.PocketAdapter) *PocketAdapter {
+	return &PocketAdapter{client: pocket.New(input.Merchant, input.ClientID, input.ClientSecret, input.Environment, input.TerminalIDRaw)}
 }
 
 func (a *PocketAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {
@@ -24,7 +24,7 @@ func (a *PocketAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceR
 
 	req := pocket.PocketCreateInvoiceInput{
 		Amount:      input.Amount,
-		OrderNumber: input.OrderUID,
+		OrderNumber: input.UID,
 		InvoiceType: "ZERO",
 		Channel:     "merchant",
 		Info:        input.Note,
@@ -53,7 +53,7 @@ func (a *PocketAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.Chec
 		return nil, fmt.Errorf("pocket adapter not configured")
 	}
 
-	res, err := a.client.GetInvoiceByOrderNumber(input.PaymentUID)
+	res, err := a.client.GetInvoiceByOrderNumber(input.UID)
 	if err != nil {
 		return nil, err
 	}

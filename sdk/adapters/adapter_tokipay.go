@@ -13,30 +13,26 @@ type TokiPayAdapter struct {
 	client tokipay.Tokipay
 }
 
-func NewTokiPayAdapter(client tokipay.Tokipay) *TokiPayAdapter {
-	return &TokiPayAdapter{client: client}
+func NewTokiPayAdapter(input types.TokipayAdapter) *TokiPayAdapter {
+	return &TokiPayAdapter{client: tokipay.New(input.Endpoint, input.APIKey, input.IMAPIKey, input.Authorization, input.MerchantID, input.SuccessURL, input.FailureURL, input.AppSchemaIOS)}
 }
 
 func (a *TokiPayAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {
 	if a == nil || a.client == nil {
 		return nil, fmt.Errorf("tokipay adapter not configured")
 	}
-	country := input.CountryCode
-	if country == "" {
-		country = "+976"
-	}
 	res, err := a.client.PaymentSentUser(tokipay.TokipayPaymentInput{
-		OrderId:     input.PaymentUID,
+		OrderId:     input.UID,
 		Amount:      int64(input.Amount),
 		PhoneNo:     input.Phone,
-		CountryCode: country,
+		CountryCode: "+976",
 		Notes:       input.Note,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &types.InvoiceResult{
-		BankInvoiceID: input.PaymentUID,
+		BankInvoiceID: input.UID,
 		IsPaid:        false,
 		Raw:           res,
 	}, nil
@@ -47,7 +43,7 @@ func (a *TokiPayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.Che
 		return nil, fmt.Errorf("tokipay adapter not configured")
 	}
 
-	res, err := a.client.PaymentStatus(input.PaymentUID)
+	res, err := a.client.PaymentStatus(input.UID)
 	if err != nil {
 		return nil, err
 	}

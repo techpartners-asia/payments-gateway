@@ -1,17 +1,22 @@
 ## Payments SDK (Go)
 
-Unified gateway over multiple payment providers (QPay, Tokipay, Golomt Ecommerce, SocialPay, StorePay, Pocket, Simple, Balc; Monpay stubbed).
+Unified gateway over multiple payment providers:
+QPay, Tokipay, Golomt Ecommerce, SocialPay, StorePay, Pocket, Simple, Balc (Monpay is stubbed for create).
 
 ### Install
 
 ```
-go get github.com/techpartners-asia/payments-gateway/sdk
+go get github.com/techpartners-asia/payments-go/sdk
 ```
 
 ### Quick Start
 
 ```go
-import paymentssdk "github.com/techpartners-asia/payments-gateway/sdk"
+import (
+    "log"
+    "os"
+    paymentssdk "github.com/techpartners-asia/payments-go/sdk"
+)
 
 cfg := paymentssdk.Config{
     Qpay: paymentssdk.QPayConfig{
@@ -25,33 +30,31 @@ cfg := paymentssdk.Config{
     // fill other providers as needed...
 }
 
-gw, err := paymentssdk.New(cfg)
+gw, err := paymentssdk.New(cfg) // builds clients from config and returns a Gateway
 if err != nil { log.Fatal(err) }
 
 res, err := gw.CreateInvoice(paymentssdk.InvoiceInput{
-    Type:       paymentssdk.PaymentTypeQPay,
-    Amount:     15000,
-    PaymentUID: "order-123",
-    IsOrg:      false,
-    OrgRegNo:   "",
-    CallbackURL: cfg.Qpay.Callback, // optional per provider
+    Type:        paymentssdk.PaymentTypeQPay,
+    Amount:      15000,
+    PaymentUID:  "order-123",
+    CallbackURL: cfg.Qpay.Callback, // provider-specific fields where applicable
 })
 if err != nil { log.Fatal(err) }
 
-fmt.Println("invoice:", res.BankInvoiceID, "qr:", res.BankQRCode, "deeplinks:", res.Deeplinks)
+log.Printf("invoice=%s qr=%s deeplinks=%v", res.BankInvoiceID, res.BankQRCode, res.Deeplinks)
 ```
 
 ### Provider Notes (required fields)
 
 - **QPay:** username, password, endpoint, callback, invoiceCode, merchantID.
 - **Tokipay:** endpoint, apiKey, imApiKey, authorization, merchantID, successURL, failureURL, appSchemaIOS.
-- **Golomt Ecommerce:** baseURL, secret, bearerToken, plus `CallbackURL` and optional `ReturnType` in `InvoiceInput` (`GET`|`POST`|`MOBILE`).
+- **Golomt Ecommerce:** baseURL, secret, bearerToken; set `CallbackURL` and optional `ReturnType` in `InvoiceInput` (`GET`|`POST`|`MOBILE`).
 - **SocialPay:** terminal, secret, endpoint.
 - **StorePay:** appUsername/appPassword, username/password, authURL, baseURL, storeID, callbackURL.
 - **Pocket:** merchant, clientID, clientSecret, environment, terminalIDRaw (string, parsed to int64).
 - **Simple:** username, password, baseURL, callbackURL; optional `ExpireMinutes` in `InvoiceInput` (default 20).
 - **Balc:** endpoint, token; marks `IsPaid=true` on create.
-- **Monpay:** create-invoice not implemented; use library QR helpers directly.
+- **Monpay:** create-invoice not implemented; use monpay QR helpers directly.
 
 ### Packages
 

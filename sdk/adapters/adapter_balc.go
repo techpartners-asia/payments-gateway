@@ -13,8 +13,8 @@ type BalcCreditAdapter struct {
 	client balcapi.Balc
 }
 
-func NewBalcCreditAdapter(client balcapi.Balc) *BalcCreditAdapter {
-	return &BalcCreditAdapter{client: client}
+func NewBalcCreditAdapter(input types.BalcAdapter) *BalcCreditAdapter {
+	return &BalcCreditAdapter{client: balcapi.New(input.Endpoint, input.Token)}
 }
 
 func (a *BalcCreditAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {

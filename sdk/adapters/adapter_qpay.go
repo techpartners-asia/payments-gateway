@@ -14,24 +14,27 @@ type QPayAdapter struct {
 	client qpay_v2.QPay
 }
 
-func NewQPayAdapter(client qpay_v2.QPay) *QPayAdapter {
-	return &QPayAdapter{client: client}
+func NewQPayAdapter(input types.QpayAdapter) *QPayAdapter {
+	if input.Username == "" || input.Password == "" || input.Endpoint == "" || input.InvoiceCode == "" || input.MerchantID == "" {
+		return nil
+	}
+	return &QPayAdapter{client: qpay_v2.New(input.Username, input.Password, input.Endpoint, input.Callback, input.InvoiceCode, input.MerchantID)}
 }
 
 func (a *QPayAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {
 	if a == nil || a.client == nil {
 		return nil, fmt.Errorf("qpay adapter not configured")
 	}
-	prefix := "personal"
-	if input.IsOrg && input.OrgRegNo != "" {
-		prefix = input.OrgRegNo
-	}
+	// prefix := "personal"
+	// if input.IsOrg && input.OrgRegNo != "" {
+	// 	prefix = input.OrgRegNo
+	// }
 	qpayInput := qpay_v2.QPayCreateInvoiceInput{
-		SenderCode:    fmt.Sprintf("%s-%s", prefix, input.PaymentUID),
-		ReceiverCode:  prefix,
-		Description:   "Захиалга",
+		SenderCode:    input.UID,
+		ReceiverCode:  input.UID,
+		Description:   input.Note,
 		Amount:        int64(input.Amount),
-		CallbackParam: map[string]string{"payment_uid": input.PaymentUID},
+		CallbackParam: map[string]string{"uid": input.UID},
 	}
 	res, _, err := a.client.CreateInvoice(qpayInput)
 	if err != nil {
@@ -62,7 +65,7 @@ func (a *QPayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckI
 		return nil, fmt.Errorf("qpay adapter not configured")
 	}
 
-	res, _, err := a.client.CheckPayment(input.PaymentUID, 100, 1)
+	res, _, err := a.client.CheckPayment(input.UID, 100, 1)
 	if err != nil {
 		return nil, err
 	}

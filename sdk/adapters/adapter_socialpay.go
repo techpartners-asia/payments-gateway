@@ -13,8 +13,8 @@ type SocialPayAdapter struct {
 	client socialpay.SocialPay
 }
 
-func NewSocialPayAdapter(client socialpay.SocialPay) *SocialPayAdapter {
-	return &SocialPayAdapter{client: client}
+func NewSocialPayAdapter(input types.SocialPayAdapter) *SocialPayAdapter {
+	return &SocialPayAdapter{client: socialpay.New(input.Terminal, input.Secret, input.Endpoint)}
 }
 
 func (a *SocialPayAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {
@@ -24,7 +24,7 @@ func (a *SocialPayAdapter) CreateInvoice(input types.InvoiceInput) (*types.Invoi
 
 	res, err := a.client.CreateInvoiceQR(socialpay.InvoiceInput{
 		Amount:  input.Amount,
-		Invoice: input.PaymentUID,
+		Invoice: input.UID,
 	})
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (a *SocialPayAdapter) CreateInvoice(input types.InvoiceInput) (*types.Invoi
 
 	// The library response does not include a QR text field; return raw and invoice id.
 	return &types.InvoiceResult{
-		BankInvoiceID: input.PaymentUID,
+		BankInvoiceID: input.UID,
 		IsPaid:        false,
 		Raw:           res,
 	}, nil
@@ -44,7 +44,7 @@ func (a *SocialPayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.C
 	}
 
 	res, err := a.client.CheckInvoice(socialpay.InvoiceInput{
-		Invoice: input.PaymentUID,
+		Invoice: input.UID,
 		Amount:  input.Amount,
 	})
 	if err != nil {

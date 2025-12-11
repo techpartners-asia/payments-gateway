@@ -1,4 +1,4 @@
-package paymentssdk
+package sdk
 
 import (
 	"fmt"
@@ -7,128 +7,99 @@ import (
 	"github.com/techpartners-asia/payments-gateway/sdk/types"
 )
 
-// Gateway bundles adapters and exposes a unified CreateInvoice entrypoint.
-type Gateway struct {
-	QPayAdapter       types.PaymentProvider
-	TokiPayAdapter    types.PaymentProvider
-	BalcCreditAdapter types.PaymentProvider
-	GolomtAdapter     types.PaymentProvider
-	SocialPayAdapter  types.PaymentProvider
-	StorePayAdapter   types.PaymentProvider
-	PocketAdapter     types.PaymentProvider
-	SimpleAdapter     types.PaymentProvider
-	MonpayAdapter     types.PaymentProvider
+type Input struct {
+	Qpay      types.QpayAdapter
+	TokiPay   types.TokipayAdapter
+	StorePay  types.StorePayAdapter
+	SocialPay types.SocialPayAdapter
+	Simple    types.SimpleAdapter
+	Pocket    types.PocketAdapter
+	MonPay    types.MonpayAdapter
+	Golomt    types.GolomtAdapter
+	Balc      types.BalcAdapter
 }
 
-// NewGatewayFromSDK builds a Gateway from an already initialized SDK clients.
-// Any missing client leaves the corresponding adapter nil.
-func NewGatewayFromSDK(s *SDK) *Gateway {
-	g := &Gateway{}
-	if s == nil {
-		return g
-	}
-	if s.Qpay != nil {
-		g.QPayAdapter = sdkAdapters.NewQPayAdapter(s.Qpay)
-	}
-	if s.TokiPay != nil {
-		g.TokiPayAdapter = sdkAdapters.NewTokiPayAdapter(s.TokiPay)
-	}
-	if s.BalcAPI != nil {
-		g.BalcCreditAdapter = sdkAdapters.NewBalcCreditAdapter(s.BalcAPI)
-	}
-	if s.Golomt != nil {
-		g.GolomtAdapter = sdkAdapters.NewGolomtAdapter(s.Golomt)
-	}
-	if s.SocialPay != nil {
-		g.SocialPayAdapter = sdkAdapters.NewSocialPayAdapter(s.SocialPay)
-	}
-	if s.StorePay != nil {
-		g.StorePayAdapter = sdkAdapters.NewStorePayAdapter(s.StorePay)
-	}
-	if s.Pocket != nil {
-		g.PocketAdapter = sdkAdapters.NewPocketAdapter(s.Pocket)
-	}
-	if s.Simple != nil {
-		g.SimpleAdapter = sdkAdapters.NewSimpleAdapter(s.Simple)
-	}
-	if s.Monpay != nil {
-		g.MonpayAdapter = sdkAdapters.NewMonpayAdapter(s.Monpay)
-	}
-	return g
+type SDK interface {
+	Create(input types.InvoiceInput) (*types.InvoiceResult, error)
+	Check(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error)
 }
 
-// NewGatewayWithConfig builds a Gateway by first constructing SDK clients from config.
-func New(cfg types.Config) (*Gateway, error) {
-	s, err := NewWithConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return NewGatewayFromSDK(s), nil
+type sdk struct {
+	input Input
+
+	*sdkAdapters.BalcCreditAdapter
+	*sdkAdapters.QPayAdapter
+	*sdkAdapters.TokiPayAdapter
+	*sdkAdapters.StorePayAdapter
+	*sdkAdapters.SocialPayAdapter
+	*sdkAdapters.SimpleAdapter
+	*sdkAdapters.PocketAdapter
+	*sdkAdapters.MonpayAdapter
+	*sdkAdapters.GolomtAdapter
 }
 
-// CreateInvoice routes to the correct provider adapter.
-func (g *Gateway) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {
-	if g == nil {
-		return nil, fmt.Errorf("gateway is nil")
+func New(input Input) SDK {
+	return &sdk{
+		input:             input,
+		QPayAdapter:       sdkAdapters.NewQPayAdapter(input.Qpay),
+		TokiPayAdapter:    sdkAdapters.NewTokiPayAdapter(input.TokiPay),
+		StorePayAdapter:   sdkAdapters.NewStorePayAdapter(input.StorePay),
+		SocialPayAdapter:  sdkAdapters.NewSocialPayAdapter(input.SocialPay),
+		SimpleAdapter:     sdkAdapters.NewSimpleAdapter(input.Simple),
+		PocketAdapter:     sdkAdapters.NewPocketAdapter(input.Pocket),
+		MonpayAdapter:     sdkAdapters.NewMonpayAdapter(input.MonPay),
+		GolomtAdapter:     sdkAdapters.NewGolomtAdapter(input.Golomt),
+		BalcCreditAdapter: sdkAdapters.NewBalcCreditAdapter(input.Balc),
 	}
-	var provider types.PaymentProvider
+}
+
+func (s *sdk) Create(input types.InvoiceInput) (*types.InvoiceResult, error) {
+
 	switch input.Type {
 	case types.PaymentTypeQPay:
-		provider = g.QPayAdapter
+		return s.QPayAdapter.CreateInvoice(input)
 	case types.PaymentTypeTokipay:
-		provider = g.TokiPayAdapter
-	case types.PaymentTypeBalc:
-		provider = g.BalcCreditAdapter
-	case types.PaymentTypeGolomt:
-		provider = g.GolomtAdapter
-	case types.PaymentTypeSocial:
-		provider = g.SocialPayAdapter
+		return s.TokiPayAdapter.CreateInvoice(input)
 	case types.PaymentTypeStorePay:
-		provider = g.StorePayAdapter
-	case types.PaymentTypePocket:
-		provider = g.PocketAdapter
+		return s.StorePayAdapter.CreateInvoice(input)
+	case types.PaymentTypeSocial:
+		return s.SocialPayAdapter.CreateInvoice(input)
 	case types.PaymentTypeSimple:
-		provider = g.SimpleAdapter
+		return s.SimpleAdapter.CreateInvoice(input)
+	case types.PaymentTypePocket:
+		return s.PocketAdapter.CreateInvoice(input)
 	case types.PaymentTypeMonpay:
-		provider = g.MonpayAdapter
+		return s.MonpayAdapter.CreateInvoice(input)
+	case types.PaymentTypeGolomt:
+		return s.GolomtAdapter.CreateInvoice(input)
+	case types.PaymentTypeBalc:
+		return s.BalcCreditAdapter.CreateInvoice(input)
 	default:
 		return nil, fmt.Errorf("unsupported payment type: %s", input.Type)
 	}
-	if provider == nil {
-		return nil, fmt.Errorf("adapter for %s is not configured", input.Type)
-	}
-	return provider.CreateInvoice(input)
 }
 
-func (g *Gateway) CheckInvoice(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
-	if g == nil {
-		return nil, fmt.Errorf("gateway is nil")
-	}
-	var provider types.PaymentProvider
+func (s *sdk) Check(input types.CheckInvoiceInput) (*types.CheckInvoiceResult, error) {
 	switch input.Type {
 	case types.PaymentTypeQPay:
-		provider = g.QPayAdapter
+		return s.QPayAdapter.CheckInvoice(input)
 	case types.PaymentTypeTokipay:
-		provider = g.TokiPayAdapter
-	case types.PaymentTypeBalc:
-		provider = g.BalcCreditAdapter
-	case types.PaymentTypeGolomt:
-		provider = g.GolomtAdapter
-	case types.PaymentTypeSocial:
-		provider = g.SocialPayAdapter
+		return s.TokiPayAdapter.CheckInvoice(input)
 	case types.PaymentTypeStorePay:
-		provider = g.StorePayAdapter
-	case types.PaymentTypePocket:
-		provider = g.PocketAdapter
+		return s.StorePayAdapter.CheckInvoice(input)
+	case types.PaymentTypeSocial:
+		return s.SocialPayAdapter.CheckInvoice(input)
 	case types.PaymentTypeSimple:
-		provider = g.SimpleAdapter
+		return s.SimpleAdapter.CheckInvoice(input)
+	case types.PaymentTypePocket:
+		return s.PocketAdapter.CheckInvoice(input)
 	case types.PaymentTypeMonpay:
-		provider = g.MonpayAdapter
+		return s.MonpayAdapter.CheckInvoice(input)
+	case types.PaymentTypeGolomt:
+		return s.GolomtAdapter.CheckInvoice(input)
+	case types.PaymentTypeBalc:
+		return s.BalcCreditAdapter.CheckInvoice(input)
 	default:
 		return nil, fmt.Errorf("unsupported payment type: %s", input.Type)
 	}
-	if provider == nil {
-		return nil, fmt.Errorf("adapter for %s is not configured", input.Type)
-	}
-	return provider.CheckInvoice(input)
 }

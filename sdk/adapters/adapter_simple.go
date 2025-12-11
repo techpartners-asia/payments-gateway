@@ -14,8 +14,8 @@ type SimpleAdapter struct {
 	client simple.Simple
 }
 
-func NewSimpleAdapter(client simple.Simple) *SimpleAdapter {
-	return &SimpleAdapter{client: client}
+func NewSimpleAdapter(input types.SimpleAdapter) *SimpleAdapter {
+	return &SimpleAdapter{client: simple.New(input.UserName, input.Password, input.BaseUrl, input.CallbackUrl)}
 }
 
 func (a *SimpleAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {
@@ -23,14 +23,10 @@ func (a *SimpleAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceR
 		return nil, fmt.Errorf("simple adapter not configured")
 	}
 
-	expMinutes := input.ExpireMinutes
-	if expMinutes <= 0 {
-		expMinutes = 20
-	}
-	expireAt := time.Now().Add(time.Duration(expMinutes) * time.Minute).Format("2006-01-02 15:04:05")
+	expireAt := time.Now().Add(20 * time.Minute).Format("2006-01-02 15:04:05")
 
 	req := simple.SimpleCreateInvoiceInput{
-		OrderID:    input.PaymentUID,
+		OrderID:    input.UID,
 		Total:      int(input.Amount),
 		ExpireDate: expireAt,
 	}
@@ -41,7 +37,7 @@ func (a *SimpleAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceR
 	}
 
 	return &types.InvoiceResult{
-		BankInvoiceID: input.PaymentUID,
+		BankInvoiceID: input.UID,
 		Raw:           res,
 		IsPaid:        false,
 	}, nil
@@ -53,7 +49,7 @@ func (a *SimpleAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.Chec
 	}
 
 	res, err := a.client.GetInvoice(simple.SimpleGetInvoiceRequest{
-		OrderID:  input.PaymentUID,
+		OrderID:  input.UID,
 		SimpleID: "",
 	})
 	if err != nil {

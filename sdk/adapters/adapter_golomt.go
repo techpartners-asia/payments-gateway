@@ -13,8 +13,8 @@ type GolomtAdapter struct {
 	client golomt.GolomtEcommerce
 }
 
-func NewGolomtAdapter(client golomt.GolomtEcommerce) *GolomtAdapter {
-	return &GolomtAdapter{client: client}
+func NewGolomtAdapter(input types.GolomtAdapter) *GolomtAdapter {
+	return &GolomtAdapter{client: golomt.New(input.BaseURL, input.Secret, input.BearerToken)}
 }
 
 func (a *GolomtAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {
@@ -39,7 +39,7 @@ func (a *GolomtAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceR
 	req := golomt.CreateInvoiceInput{
 		ReturnType:    returnType,
 		Amount:        input.Amount,
-		TransactionID: input.PaymentUID,
+		TransactionID: input.UID,
 		Callback:      input.CallbackURL,
 	}
 
@@ -60,12 +60,12 @@ func (a *GolomtAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.Chec
 		return nil, fmt.Errorf("golomt adapter not configured")
 	}
 
-	res, err := a.client.Inquiry(input.PaymentUID)
+	res, err := a.client.Inquiry(input.UID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.CheckInvoiceResult{
-		IsPaid: res.Status == types.GolomtTransactionStatusSuccess,
+		IsPaid: res.Status == "000",
 	}, nil
 }

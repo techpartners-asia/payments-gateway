@@ -13,8 +13,8 @@ type StorePayAdapter struct {
 	client storepay.Storepay
 }
 
-func NewStorePayAdapter(client storepay.Storepay) *StorePayAdapter {
-	return &StorePayAdapter{client: client}
+func NewStorePayAdapter(input types.StorePayAdapter) *StorePayAdapter {
+	return &StorePayAdapter{client: storepay.New(input.AppUserName, input.AppPassword, input.Username, input.Password, input.AuthUrl, input.BaseUrl, input.StoreId, input.CallbackUrl)}
 }
 
 func (a *StorePayAdapter) CreateInvoice(input types.InvoiceInput) (*types.InvoiceResult, error) {
@@ -43,7 +43,7 @@ func (a *StorePayAdapter) CheckInvoice(input types.CheckInvoiceInput) (*types.Ch
 		return nil, fmt.Errorf("storepay adapter not configured")
 	}
 
-	res, err := a.client.LoanCheck(input.PaymentUID)
+	res, err := a.client.LoanCheck(input.UID)
 	if err != nil {
 		return nil, err
 	}
